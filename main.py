@@ -1,6 +1,14 @@
 import torch
 import pickle
 from models.ffnn_1 import SpamClassifier
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import classification_report, confusion_matrix
+
+
+def load_data(path):
+    df = pd.read_csv(path)
+    return df
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def load_vectorizer(path):
@@ -19,6 +27,14 @@ def load_model(vectoriser, model_path):
     model.eval()
     return model
 
+def clean_data_emailspam2(df):
+    df = df.dropna()
+    df = df.iloc[:-1]
+    df = df[['Category', 'Message']]  
+    # Handle the label encoding
+    le = LabelEncoder()
+    df['Label'] = le.fit_transform(df['Category'])
+    return df
 
 def predict_email(model, vectoriser, email_array):
     X = vectoriser.transform(email_array).toarray()
@@ -31,26 +47,53 @@ def predict_email(model, vectoriser, email_array):
         probs = outputs.squeeze().cpu().numpy()
     return probs
 
+
+
+
+def predict_and_evaluate(model, vectoriser, df):
+    X = vectoriser.transform(df['Message']).toarray()
+    X_tensor = torch.tensor(X, dtype=torch.float32, device=device)
+
+    with torch.no_grad():
+        outputs = model(X_tensor)
+        probabilities = outputs.squeeze().cpu().numpy()
+        predictions = (probabilities > 0.5).astype(int)
+    
+    # Calculate accuracy
+    true_labels = df['Label'].values
+    accuracy = (predictions == true_labels).mean()
+    
+    print(f"\n=== Results ===")
+    print(f"Accuracy: {accuracy:.4f} ({accuracy*100:.2f}%)")
+    print(f"Total samples: {len(true_labels)}")
+    print(f"Correct predictions: {(predictions == true_labels).sum()}")
+    print(f"Incorrect predictions: {(predictions != true_labels).sum()}")
+    
+    # Print classification report
+    print(f"\n=== Classification Report ===")
+    print(classification_report(true_labels, predictions, target_names=['Not Spam', 'Spam']))
+    
+    return {
+        'accuracy': accuracy,
+        'predictions': predictions,
+        'probabilities': probabilities,
+        'true_labels': true_labels,
+    }
+
+
+
 def main():
-    VECTORIZER_PATH = "tfidf_vectoriser.pkl"
-    MODEL_PATH = "weights/ffnn_model.pth"
-    input_emails = ["Free entry in a weekly contest! Click on the link to win a prize", "Can we meet tomorrow at noon?"]
+    VECTORIZER_PATH = "vectorisers/tfidf_vectoriser_v2.pkl"
+    MODEL_PATH = "weights/ffnn_model_v2.pth"
 
-
+    
+    df = load_data('datasets/email_spam2.csv')
+    df = clean_data_emailspam2(df)
 
 
     vectoriser = load_vectorizer(VECTORIZER_PATH)
     model = load_model(vectoriser, MODEL_PATH)
-    if not input_emails:
-        raise ValueError("Input email list is empty.")
-
-    #predict the emails
-    results = predict_email(model, vectoriser, input_emails)
-
-    for text, prob in zip(input_emails, results):
-        label_text = "[Spam]" if prob > 0.5 else "[Not Spam]"
-        print(f"{label_text} ({prob*100:.2f}%) {text}")
-
-
+    results = predict_and_evaluate(model, vectoriser, df)
+  
 if __name__ == "__main__":
     main()
