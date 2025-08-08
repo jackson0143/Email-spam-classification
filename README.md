@@ -1,15 +1,15 @@
 # Email Spam Classifier
 
-A pipeline for classifying emails as **spam** or **not spam** using neural networks (forwardfeed). Currently the model has an accuracy of approximately **95%**
+A pipeline for classifying emails as **spam** or **not spam** using neural networks (forwardfeed). Currently the model has an accuracy of approximately **90%** on unseen data
 ### 📊 Classification Report
 
 | Label | Precision | Recall | F1-Score | Support |
 |-------|-----------|--------|----------|---------|
-| **Ham** | 0.98 | 0.99 | 0.99 | 975 |
-| **Spam** | 0.95 | 0.90 | 0.92 | 157 |
-| **Accuracy** |       |       | **0.98** | 1132 |
-| **Macro avg** | 0.97 | 0.94 | 0.95 | 1132 |
-| **Weighted avg** | 0.98 | 0.98 | 0.98 | 1132 |
+| **Ham** | 0.92 | 0.95 | 0.93 | 58 |
+| **Spam** | 0.88 | 0.81 | 0.84 | 26 |
+| **Accuracy** |       |       | **0.90** | 84 |
+| **Macro avg** | 0.90 | 0.88 | 0.89 | 84 |
+| **Weighted avg** | 0.90 | 0.90 | 0.90 | 84 |
 
 The dataset used is the [Spam email classification - Ashfak Yeafi](https://www.kaggle.com/datasets/ashfakyeafi/spam-email-classification) and [Email Spam Text Classification Dataset - Kucev Roman](https://www.kaggle.com/datasets/tapakah68/email-spam-classification) which contains the content of the email messages with labels
 - 'Spam' indicates that the email is classified as spam.
